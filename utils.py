@@ -34,6 +34,7 @@ def weights_init_normal(m):
 
 class Logger():
     def __init__(self, n_epochs, batches_epoch):
+        #self.viz = Visdom(server='35.225.232.121',port=5002)
         self.viz = Visdom()
         self.n_epochs = n_epochs
         self.batches_epoch = batches_epoch
@@ -104,4 +105,3 @@ class LambdaLR():
 
     def step(self, epoch):
         return 1.0 - max(0, epoch + self.offset - self.decay_start_epoch)/(self.n_epochs - self.decay_start_epoch)
-

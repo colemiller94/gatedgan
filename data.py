@@ -17,7 +17,8 @@ class ImageDataset(Dataset):
                 transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)) 
               ]
         
-        self.transform = transforms.Compose(transforms_)        
+        self.transform = transforms.Compose(transforms_)
+#         print(self.transform)
         #content image source
         self.X = sorted(glob.glob(os.path.join(root, f'{mode}Content', '*')))
         
@@ -30,19 +31,29 @@ class ImageDataset(Dataset):
         
         
     def __getitem__(self,index):
+                                                 
         output = {}
         output['content'] = self.transform(Image.open(self.X[index % len(self.X)]))
         
         #select style
         selection = self.Y[random.randint(0, len(self.Y) - 1)]
-        output['style'] = self.transform(Image.open(selection[1]))
+        
+        try:                                         
+            output['style'] = self.transform(Image.open(selection[1]))
+        except:
+            print('thisuns grey')
+            print(selection)
+            
+            #output['style'] = self.transform_grey(Image.open(selection[1]))
+            
+            
         output['style_label'] = selection[0]
     
         return output
     
     def __len__(self):
-        return max(len(self.X), len(self.style_sources))
-   
+        return max(len(self.X), len(self.Y))
+
 class ReplayBuffer():
     def __init__(self, max_size=50):
         assert (max_size > 0), 'Empty buffer or trying to create a black hole. Be careful.'
