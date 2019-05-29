@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 class TVLoss(nn.Module):
     def __init__(self,TVLoss_weight= 1):
@@ -91,12 +92,13 @@ class Transformer(nn.Module):
 #         print(label)
 #         print(len(label))
 #         print(label.shape)
-        mix = sum([self.t[i](x[0])*v for (i,v) in enumerate(label)])
+       
+        mix = np.sum([self.t[i](x[0])*v for (i,v) in enumerate(label) if v])
         #return content transformed by style specific residual block
         return mix
 
 class Decoder(nn.Module):
-    def __init__(self, out_nc, ngf, n_residual_blocks=9):
+    def __init__(self, out_nc, ngf, n_residual_blocks=5):
         super(Decoder, self).__init__()
 
         in_features = ngf * 4
@@ -166,7 +168,7 @@ class Discriminator(nn.Module):
         self.model = nn.Sequential(*model)
 
         # FCN classification layer-
-        self.fldiscriminator = nn.Conv2d(512, 1, 4, padding=2)
+        self.fldiscriminator = nn.Conv2d(512, 1, 4, padding = 2)
 
         # aux class layer
         self.aux_clf = nn.Conv2d(512, n_styles, 4, padding = 2)
