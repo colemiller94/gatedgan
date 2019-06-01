@@ -1,35 +1,28 @@
-#https://github.com/jxgu1016/Total_Variation_Loss.pytorch/blob/master/TVLoss.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+#https://github.com/chongyangma/cs231n/blob/master/assignments/assignment3/style_transfer_pytorch.py
 class TVLoss(nn.Module):
-    def __init__(self,TVLoss_weight= 1):
+    def __init__(self, TVLoss_weight= 1):
         super(TVLoss,self).__init__()
         self.TVLoss_weight = TVLoss_weight
 
-    def forward(self,x):
-        batch_size = x.size()[0]
-        h_x = x.size()[2]
-        w_x = x.size()[3]
-        count_h = self._tensor_size(x[:,:,1:,:])
-        count_w = self._tensor_size(x[:,:,:,1:])
-        h_tv = torch.pow((x[:,:,1:,:]-x[:,:,:h_x-1,:]),2).sum()
-        w_tv = torch.pow((x[:,:,:,1:]-x[:,:,:,:w_x-1]),2).sum()
-        return self.TVLoss_weight*2*(h_tv/count_h+w_tv/count_w)/batch_size
+    def forward(self,x):    
+        w_variance = torch.sum(torch.pow(x[:,:,:,:-1] - x[:,:,:,1:], 2))
+        h_variance = torch.sum(torch.pow(x[:,:,:-1,:] - x[:,:,1:,:], 2))
+        loss = self.TVLoss_weight * (h_variance + w_variance)
+        return loss
 
-    def _tensor_size(self,t):
-        return t.size()[1]*t.size()[2]*t.size()[3]
-
-
-
+#https://github.com/pytorch/pytorch/issues/9160#issuecomment-483048684
 class Identity(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__()
     def forward(self, x):
         return x
-
+    
+#https://github.com/aitorzip/PyTorch-CycleGAN/blob/master/models.py
 class ResidualBlock(nn.Module):
     def __init__(self,in_features):
         super(ResidualBlock,self).__init__()
@@ -73,8 +66,7 @@ class Encoder(nn.Module):
 
     def forward(self,x):
         #Return batch w/ encoded content picture
-        return [self.model(x['content']),
-               x['style_label']]
+        return [self.model(x['content']), x['style_label']]
 
 class Transformer(nn.Module):
     def __init__(self,n_styles, ngf, auto_id=True):
@@ -105,8 +97,6 @@ class Decoder(nn.Module):
         out_features = in_features//2
 
         model = []
-        #ResBlockLand
-
         for _ in range(n_residual_blocks):
             model += [ResidualBlock(in_features)]
 
@@ -138,47 +128,44 @@ class Generator(nn.Module):
 
     def forward(self,x):
         e = self.encoder(x)
-#         print(e[0].shape,e[1])
         t = self.transformer(e)
-#         print(t.shape)
         d = self.decoder(t)
-#         print(d.shape)
         return d
 
 class Discriminator(nn.Module):
+    """
+    Patch-Gan discriminator 
+    """
     def __init__(self, in_nc, n_styles, ndf=64):
         super(Discriminator, self).__init__()
 
-        # A bunch of convolutions one after another
-        model = [   nn.Conv2d(in_nc, 64, 4, stride=2, padding=1),
+        # A bunch of convolutions 
+        model = [   nn.Conv2d(in_nc, 64, 4, stride=2, padding=2),
                     nn.LeakyReLU(0.2, inplace=True) ]
 
-        model += [  nn.Conv2d(64, 128, 4, stride=2, padding=1),
+        model += [  nn.Conv2d(64, 128, 4, stride=2, padding=2),
                     nn.InstanceNorm2d(128),
                     nn.LeakyReLU(0.2, inplace=True) ]
 
-        model += [  nn.Conv2d(128, 256, 4, stride=2, padding=1),
+        model += [  nn.Conv2d(128, 256, 4, stride=2, padding=2),
                     nn.InstanceNorm2d(256),
                     nn.LeakyReLU(0.2, inplace=True) ]
 
-        model += [  nn.Conv2d(256, 512, 4, padding=1),
+        model += [  nn.Conv2d(256, 512, 4,stride=1, padding=2),
                     nn.InstanceNorm2d(512),
                     nn.LeakyReLU(0.2, inplace=True) ]
 
         self.model = nn.Sequential(*model)
 
-        # FCN classification layer-
+        # GAN (real/notreal) Output-
         self.fldiscriminator = nn.Conv2d(512, 1, 4, padding = 2)
 
-        # aux class layer
+        # Classification Output
         self.aux_clf = nn.Conv2d(512, n_styles, 4, padding = 2)
 
     def forward(self, x):
         base =  self.model(x)
         discrim = self.fldiscriminator(base)
-        # Average pooling and flatten
-        #discrim=F.avg_pool2d(discrim, discrim.size()[2:]).view(discrim.size()[0], -1)
-        #discrim = discrim.view(-1)
         clf = self.aux_clf(base).transpose(1,3)
 
         return [discrim,clf]

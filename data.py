@@ -16,14 +16,12 @@ class ImageDataset(Dataset):
                 transforms.ToTensor(),
                 transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)) 
               ]
-        
+        #content source
         self.transform = transforms.Compose(transforms_)
-#         print(self.transform)
-        #content image source
         self.X = sorted(glob.glob(os.path.join(root, f'{mode}Content', '*')))
         
-        self.Y = []
         #style image source(s)
+        self.Y = []
         style_sources = sorted(glob.glob(os.path.join(root, f'{mode}Styles', '*')))
         for label,style in enumerate(style_sources):
             temp = [(label,x) for x in sorted(glob.glob(style_sources[label]+"/*"))]
@@ -43,10 +41,7 @@ class ImageDataset(Dataset):
         except:
             print('thisuns grey')
             print(selection)
-            
-            #output['style'] = self.transform_grey(Image.open(selection[1]))
-            
-            
+                        
         output['style_label'] = selection[0]
     
         return output

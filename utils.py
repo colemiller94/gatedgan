@@ -47,7 +47,8 @@ class Logger():
         self.image_windows = {}
 
 
-    def log(self, losses=None, images=None):
+    def log(self, losses=None, images=None, category=None):
+        
         self.mean_period += (time.time() - self.prev_time)
         self.prev_time = time.time()
 
@@ -74,6 +75,9 @@ class Logger():
                 self.image_windows[image_name] = self.viz.image(tensor2image(tensor.data), opts={'title':image_name})
             else:
                 self.viz.image(tensor2image(tensor.data), win=self.image_windows[image_name], opts={'title':image_name})
+                
+
+            
 
         # End of epoch
 #         if True:
