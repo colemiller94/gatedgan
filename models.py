@@ -71,20 +71,13 @@ class Encoder(nn.Module):
 class Transformer(nn.Module):
     def __init__(self,n_styles, ngf, auto_id=True):
         super(Transformer, self).__init__()
-
-        #nclasses = input_nclasses
         self.t = nn.ModuleList([ResidualBlock(ngf*4) for i in range(n_styles)])
         if auto_id:
             self.t.append(Identity())
-        #self.i = Identity()
 
     def forward(self,x):
-        #x0 is content, x1 is label
+        #x0 is content, x[1][0] is label
         label = x[1][0]
-#         print(label)
-#         print(len(label))
-#         print(label.shape)
-       
         mix = np.sum([self.t[i](x[0])*v for (i,v) in enumerate(label) if v])
         #return content transformed by style specific residual block
         return mix

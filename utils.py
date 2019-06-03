@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue May  7 18:10:24 2019
-
-@author: colemiller1
+from https://github.com/aitorzip/PyTorch-CycleGAN/blob/master/utils.py
 """
 import time
 import sys
@@ -34,7 +32,7 @@ def weights_init_normal(m):
 
 class Logger():
     def __init__(self, n_epochs, batches_epoch):
-        #self.viz = Visdom(server='35.225.232.121',port=5002)
+        #self.viz = Visdom(server='',port=)
         self.viz = Visdom()
         self.n_epochs = n_epochs
         self.batches_epoch = batches_epoch
